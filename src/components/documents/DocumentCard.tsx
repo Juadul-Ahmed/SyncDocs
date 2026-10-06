@@ -15,7 +15,7 @@ export default function DocumentCard({
   updatedAt,
 }: DocumentCardProps) {
   return (
-    <div className="group rounded-xl border border-default-200 p-5 transition hover:border-default-400 hover:shadow-sm">
+    <div className="group min-w-0 rounded-xl border border-default-200 p-5 transition hover:border-default-400 hover:shadow-sm">
       <div className="flex items-start justify-between">
         <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-default-100">
           <FiFileText size={22} />
