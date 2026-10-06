@@ -1,10 +1,19 @@
+"use client";
+
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import DocumentList from "@/components/documents/DocumentList";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import { useAppSelector } from "@/store/hooks";
 
 export default function Home() {
+  const documents = useAppSelector(
+    (state) => state.documents.documents
+  );
+
+  console.log("Redux documents:", documents);
+
   return (
     <div className="min-h-screen">
       <Navbar />
