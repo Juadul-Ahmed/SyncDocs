@@ -27,55 +27,30 @@ body {
 
   font-family: var(--font-geist-sans), sans-serif;
 
-  background: #0b0b0d;
+  background:
+    radial-gradient(
+      circle at 10% 10%,
+      rgba(255, 255, 255, 0.10),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 90% 20%,
+      rgba(255, 255, 255, 0.07),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 50% 100%,
+      rgba(255, 255, 255, 0.05),
+      transparent 38%
+    ),
+    var(--background);
+
+  background-attachment: fixed;
+  background-size: 120% 120%;
 
   color: var(--foreground);
 
-  position: relative;
-  overflow-x: hidden;
-}
-
-/* Animated ambient lights */
-
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-
-  width: 500px;
-  height: 500px;
-
-  border-radius: 50%;
-
-  pointer-events: none;
-
-  z-index: -1;
-
-  filter: blur(100px);
-
-  opacity: 0.16;
-}
-
-/* Large white glow */
-
-body::before {
-  top: -180px;
-  left: -150px;
-
-  background: rgba(255, 255, 255, 0.8);
-
-  animation: ambientOrbOne 12s ease-in-out infinite;
-}
-
-/* Second white glow */
-
-body::after {
-  right: -180px;
-  bottom: -150px;
-
-  background: rgba(210, 215, 225, 0.65);
-
-  animation: ambientOrbTwo 16s ease-in-out infinite;
+  animation: ambientMove 18s ease-in-out infinite;
 }
 
 /* ========================================

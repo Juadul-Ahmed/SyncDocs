@@ -1,0 +1,16 @@
+{
+  "name": "syncdocs-backend",
+  "version": "1.0.0",
+  "description": "SyncDocs backend",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.6",
+    "gitignore": "^0.7.0",
+    "mongoose": "^9.11.0"
+  }
+}

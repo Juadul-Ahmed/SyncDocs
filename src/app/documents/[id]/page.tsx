@@ -398,7 +398,7 @@ export default function DocumentPage() {
 
               <p className="text-xs text-white/30">
                 {content.length} characters
-              </p>
+              </p> 
             </div>
           </div>
         </div>
