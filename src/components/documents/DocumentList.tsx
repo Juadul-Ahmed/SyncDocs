@@ -35,6 +35,7 @@ export default function DocumentList() {
           {documents.map((document) => (
             <DocumentCard
               key={document.id}
+              id={document.id}
               title={document.title}
               updatedAt="Just now"
             />
