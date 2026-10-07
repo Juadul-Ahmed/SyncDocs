@@ -1,29 +1,13 @@
+"use client";
+
+import { useAppSelector } from "@/store/hooks";
 import DocumentCard from "./DocumentCard";
 
-const documents = [
-  {
-    id: 1,
-    title: "Project Requirements",
-    updatedAt: "Updated 5 minutes ago",
-  },
-  {
-    id: 2,
-    title: "Software Engineering Notes",
-    updatedAt: "Updated 1 hour ago",
-  },
-  {
-    id: 3,
-    title: "Team Meeting Notes",
-    updatedAt: "Updated yesterday",
-  },
-  {
-    id: 4,
-    title: "Final Year Project",
-    updatedAt: "Updated 2 days ago",
-  },
-];
-
 export default function DocumentList() {
+  const documents = useAppSelector(
+    (state) => state.documents.documents
+  );
+
   return (
     <section>
       <div className="mb-4 flex items-center justify-between">
@@ -36,15 +20,27 @@ export default function DocumentList() {
         </button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {documents.map((document) => (
-          <DocumentCard
-            key={document.id}
-            title={document.title}
-            updatedAt={document.updatedAt}
-          />
-        ))}
-      </div>
+      {documents.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-default-300 p-10 text-center">
+          <p className="text-default-500">
+            No documents yet.
+          </p>
+
+          <p className="mt-1 text-sm text-default-400">
+            Create your first document to get started.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {documents.map((document) => (
+            <DocumentCard
+              key={document.id}
+              title={document.title}
+              updatedAt="Just now"
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

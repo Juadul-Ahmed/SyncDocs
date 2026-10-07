@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type Document = {
   id: string;
@@ -19,7 +19,33 @@ const initialState: DocumentState = {
 const documentSlice = createSlice({
   name: "documents",
   initialState,
-  reducers: {},
+
+  reducers: {
+    addDocument: (
+      state,
+      action: PayloadAction<Document>
+    ) => {
+      state.documents.push(action.payload);
+    },
+
+    updateDocument: (
+      state,
+      action: PayloadAction<Document>
+    ) => {
+      const index = state.documents.findIndex(
+        (document) => document.id === action.payload.id
+      );
+
+      if (index !== -1) {
+        state.documents[index] = action.payload;
+      }
+    },
+  },
 });
+
+export const {
+  addDocument,
+  updateDocument,
+} = documentSlice.actions;
 
 export default documentSlice.reducer;

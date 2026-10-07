@@ -1,7 +1,13 @@
 import { Button } from "@heroui/react";
 import { FiPlus } from "react-icons/fi";
 
-export default function DashboardHeader() {
+type DashboardHeaderProps = {
+  onCreateDocument: () => void;
+};
+
+export default function DashboardHeader({
+  onCreateDocument,
+}: DashboardHeaderProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -14,7 +20,10 @@ export default function DashboardHeader() {
         </p>
       </div>
 
-      <Button variant="primary">
+      <Button
+        variant="primary"
+        onPress={onCreateDocument}
+      >
         <FiPlus size={18} />
         New Document
       </Button>
