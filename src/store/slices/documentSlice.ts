@@ -21,6 +21,13 @@ const documentSlice = createSlice({
   initialState,
 
   reducers: {
+    setDocuments: (
+      state,
+      action: PayloadAction<Document[]>
+    ) => {
+      state.documents = action.payload;
+    },
+
     addDocument: (
       state,
       action: PayloadAction<Document>
@@ -44,6 +51,7 @@ const documentSlice = createSlice({
 });
 
 export const {
+  setDocuments,
   addDocument,
   updateDocument,
 } = documentSlice.actions;

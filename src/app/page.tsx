@@ -1,12 +1,24 @@
 "use client";
 
+import { useEffect } from "react";
+
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import DocumentList from "@/components/documents/DocumentList";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addDocument } from "@/store/slices/documentSlice";
+
+import {
+  addDocument,
+  setDocuments,
+} from "@/store/slices/documentSlice";
+
+import {
+  useAppDispatch,
+  useAppSelector,
+} from "@/store/hooks";
+
+import { getDocuments } from "@/lib/api";
 
 export default function Home() {
   const dispatch = useAppDispatch();
@@ -14,6 +26,20 @@ export default function Home() {
   const documents = useAppSelector(
     (state) => state.documents.documents
   );
+
+  useEffect(() => {
+    const loadDocuments = async () => {
+      try {
+        const data = await getDocuments();
+
+        dispatch(setDocuments(data));
+      } catch (error) {
+        console.error("Failed to load documents:", error);
+      }
+    };
+
+    loadDocuments();
+  }, [dispatch]);
 
   const handleCreateDocument = () => {
     dispatch(
