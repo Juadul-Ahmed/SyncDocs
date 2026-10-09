@@ -1,16 +1,19 @@
-
 const API_URL = "/api";
 
-type ApiDocument = {
+export type ApiDocument = {
   _id: string;
   title: string;
   content: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
-type DocumentData = {
+export type DocumentData = {
   id: string;
   title: string;
   content: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // GET all documents
@@ -29,12 +32,17 @@ export const getDocuments = async (): Promise<DocumentData[]> => {
     id: document._id,
     title: document.title,
     content: document.content,
+    createdAt: document.createdAt,
+    updatedAt: document.updatedAt,
   }));
 };
 
 // CREATE a document
 export const createDocument = async (
-  documentData: Omit<DocumentData, "id">
+  documentData: {
+    title: string;
+    content: string;
+  },
 ): Promise<DocumentData> => {
   const response = await fetch(`${API_URL}/documents`, {
     method: "POST",
@@ -54,16 +62,20 @@ export const createDocument = async (
     id: data._id,
     title: data.title,
     content: data.content,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
   };
 };
 
 // GET one document by ID
 export const getDocument = async (
-  id: string
+  id: string,
 ): Promise<DocumentData> => {
   const response = await fetch(
     `${API_URL}/documents/${encodeURIComponent(id)}`,
-    { cache: "no-store" }
+    {
+      cache: "no-store",
+    },
   );
 
   if (!response.ok) {
@@ -76,17 +88,19 @@ export const getDocument = async (
     id: data._id,
     title: data.title,
     content: data.content,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
   };
 };
 
-
+// UPDATE a document
 export const updateDocument = async (
   id: string,
   documentData: {
     title: string;
     content: string;
-  }
-) => {
+  },
+): Promise<DocumentData> => {
   const response = await fetch(
     `${API_URL}/documents/${encodeURIComponent(id)}`,
     {
@@ -95,7 +109,7 @@ export const updateDocument = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify(documentData),
-    }
+    },
   );
 
   if (!response.ok) {
@@ -108,5 +122,7 @@ export const updateDocument = async (
     id: data._id,
     title: data.title,
     content: data.content,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
   };
 };

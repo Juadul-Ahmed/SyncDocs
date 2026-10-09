@@ -8,6 +8,8 @@ type Document = {
   id: string;
   title: string;
   content: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 type DocumentListProps = {
@@ -58,7 +60,7 @@ export default function DocumentList({
               key={document.id}
               id={document.id}
               title={document.title}
-              updatedAt="Just now"
+              updatedAt={document.updatedAt}
             />
           ))}
         </div>

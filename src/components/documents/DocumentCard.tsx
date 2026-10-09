@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@heroui/react";
@@ -14,6 +15,48 @@ type DocumentCardProps = {
   updatedAt: string;
 };
 
+function formatUpdatedAt(dateString: string): string {
+  if (!dateString) return "Recently updated";
+
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Recently updated";
+  }
+
+  const now = Date.now();
+  const elapsed = Math.max(0, now - date.getTime());
+
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (elapsed < minute) {
+    return "Updated just now";
+  }
+
+  if (elapsed < hour) {
+    const minutes = Math.floor(elapsed / minute);
+    return `Updated ${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  }
+
+  if (elapsed < day) {
+    const hours = Math.floor(elapsed / hour);
+    return `Updated ${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+
+  if (elapsed < 7 * day) {
+    const days = Math.floor(elapsed / day);
+    return `Updated ${days} day${days === 1 ? "" : "s"} ago`;
+  }
+
+  return `Updated ${date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })}`;
+}
+
 export default function DocumentCard({
   id,
   title,
@@ -28,6 +71,14 @@ export default function DocumentCard({
   return (
     <div
       onClick={handleOpenDocument}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          handleOpenDocument();
+        }
+      }}
+      role="link"
+      tabIndex={0}
+      aria-label={`Open document ${title}`}
       className="
         group
         relative
@@ -43,17 +94,14 @@ export default function DocumentCard({
         transition-all
         duration-300
         ease-out
-
         hover:-translate-y-1
         hover:border-white/[0.18]
         hover:bg-white/[0.07]
         hover:backdrop-blur-2xl
         hover:shadow-[0_12px_35px_rgba(0,0,0,0.25)]
-
         active:translate-y-0
       "
     >
-      {/* Subtle glass highlight */}
       <div
         className="
           pointer-events-none
@@ -70,9 +118,7 @@ export default function DocumentCard({
         "
       />
 
-      {/* Top */}
       <div className="relative z-10 flex items-start justify-between">
-        {/* File Icon */}
         <div
           className="
             flex
@@ -85,7 +131,6 @@ export default function DocumentCard({
             text-white/70
             transition-all
             duration-300
-
             group-hover:scale-105
             group-hover:bg-white/[0.11]
             group-hover:text-white
@@ -97,13 +142,12 @@ export default function DocumentCard({
           />
         </div>
 
-        {/* Options */}
         <Button
           isIconOnly
           variant="tertiary"
           aria-label="Document options"
           onPress={() => {
-            // Options menu will be added later
+            // Options menu will be added later.
           }}
           className="
             !bg-transparent
@@ -120,7 +164,6 @@ export default function DocumentCard({
         </Button>
       </div>
 
-      {/* Content */}
       <div className="relative z-10 mt-5">
         <h3
           className="
@@ -149,9 +192,10 @@ export default function DocumentCard({
           "
         >
           <FiClock size={14} />
-          <span>{updatedAt}</span>
+          <span>{formatUpdatedAt(updatedAt)}</span>
         </div>
       </div>
     </div>
   );
 }
+

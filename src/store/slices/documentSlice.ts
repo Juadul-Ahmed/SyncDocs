@@ -4,6 +4,8 @@ type Document = {
   id: string;
   title: string;
   content: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 type DocumentState = {
@@ -21,26 +23,17 @@ const documentSlice = createSlice({
   initialState,
 
   reducers: {
-    setDocuments: (
-      state,
-      action: PayloadAction<Document[]>
-    ) => {
+    setDocuments: (state, action: PayloadAction<Document[]>) => {
       state.documents = action.payload;
     },
 
-    addDocument: (
-      state,
-      action: PayloadAction<Document>
-    ) => {
+    addDocument: (state, action: PayloadAction<Document>) => {
       state.documents.push(action.payload);
     },
 
-    updateDocument: (
-      state,
-      action: PayloadAction<Document>
-    ) => {
+    updateDocument: (state, action: PayloadAction<Document>) => {
       const index = state.documents.findIndex(
-        (document) => document.id === action.payload.id
+        (document) => document.id === action.payload.id,
       );
 
       if (index !== -1) {
@@ -50,10 +43,7 @@ const documentSlice = createSlice({
   },
 });
 
-export const {
-  setDocuments,
-  addDocument,
-  updateDocument,
-} = documentSlice.actions;
+export const { setDocuments, addDocument, updateDocument } =
+  documentSlice.actions;
 
 export default documentSlice.reducer;
