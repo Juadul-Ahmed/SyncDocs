@@ -126,3 +126,20 @@ export const updateDocument = async (
     updatedAt: data.updatedAt,
   };
 };
+
+// DELETE a document
+export const deleteDocument = async (
+  id: string,
+): Promise<void> => {
+  const response = await fetch(
+    `${API_URL}/documents/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || "Failed to delete document");
+  }
+};

@@ -68,3 +68,38 @@ export async function PUT(
     );
   }
 }
+
+// DELETE a document
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+
+    const response = await fetch(
+      `http://127.0.0.1:5000/api/documents/${encodeURIComponent(id)}`,
+      {
+        method: "DELETE",
+        cache: "no-store",
+      },
+    );
+
+    const data = await response.text();
+
+    return new Response(data || null, {
+      status: response.status,
+      headers: {
+        "Content-Type":
+          response.headers.get("content-type") ?? "application/json",
+      },
+    });
+  } catch (error) {
+    console.error("Failed to delete document:", error);
+
+    return Response.json(
+      { message: "Failed to delete document" },
+      { status: 500 },
+    );
+  }
+}

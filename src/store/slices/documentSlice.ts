@@ -40,6 +40,11 @@ const documentSlice = createSlice({
         state.documents[index] = action.payload;
       }
     },
+    deleteDocument: (state, action: PayloadAction<string>) => {
+      state.documents = state.documents.filter(
+        (document) => document.id !== action.payload,
+      );
+    },
   },
 });
 
