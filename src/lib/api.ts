@@ -1,3 +1,4 @@
+
 const API_URL = "/api";
 
 type ApiDocument = {
@@ -6,12 +7,17 @@ type ApiDocument = {
   content: string;
 };
 
-export const getDocuments = async () => {
-  console.log("Fetching:", `${API_URL}/documents`);
+type DocumentData = {
+  id: string;
+  title: string;
+  content: string;
+};
 
-  const response = await fetch(`${API_URL}/documents`);
-
-  console.log("Response:", response.status);
+// GET all documents
+export const getDocuments = async (): Promise<DocumentData[]> => {
+  const response = await fetch(`${API_URL}/documents`, {
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch documents");
@@ -19,11 +25,56 @@ export const getDocuments = async () => {
 
   const data: ApiDocument[] = await response.json();
 
-  console.log("Backend data:", data);
-
   return data.map((document) => ({
     id: document._id,
     title: document.title,
     content: document.content,
   }));
+};
+
+// CREATE a document
+export const createDocument = async (
+  documentData: Omit<DocumentData, "id">
+): Promise<DocumentData> => {
+  const response = await fetch(`${API_URL}/documents`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(documentData),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create document");
+  }
+
+  const data: ApiDocument = await response.json();
+
+  return {
+    id: data._id,
+    title: data.title,
+    content: data.content,
+  };
+};
+
+// GET one document by ID
+export const getDocument = async (
+  id: string
+): Promise<DocumentData> => {
+  const response = await fetch(
+    `${API_URL}/documents/${encodeURIComponent(id)}`,
+    { cache: "no-store" }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch document");
+  }
+
+  const data: ApiDocument = await response.json();
+
+  return {
+    id: data._id,
+    title: data.title,
+    content: data.content,
+  };
 };

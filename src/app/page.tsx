@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from "react";
@@ -18,7 +19,10 @@ import {
   useAppSelector,
 } from "@/store/hooks";
 
-import { getDocuments } from "@/lib/api";
+import {
+  getDocuments,
+  createDocument,
+} from "@/lib/api";
 
 export default function Home() {
   const dispatch = useAppDispatch();
@@ -31,7 +35,6 @@ export default function Home() {
     const loadDocuments = async () => {
       try {
         const data = await getDocuments();
-
         dispatch(setDocuments(data));
       } catch (error) {
         console.error("Failed to load documents:", error);
@@ -41,17 +44,18 @@ export default function Home() {
     loadDocuments();
   }, [dispatch]);
 
-  const handleCreateDocument = () => {
-    dispatch(
-      addDocument({
-        id: crypto.randomUUID(),
+  const handleCreateDocument = async () => {
+    try {
+      const newDocument = await createDocument({
         title: "Untitled Document",
         content: "",
-      })
-    );
-  };
+      });
 
-  console.log("Redux documents:", documents);
+      dispatch(addDocument(newDocument));
+    } catch (error) {
+      console.error("Failed to create document:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen">
