@@ -1,13 +1,24 @@
+
 "use client";
 
-import { useAppSelector } from "@/store/hooks";
 import DocumentCard from "./DocumentCard";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-export default function DocumentList() {
-  const documents = useAppSelector(
-    (state) => state.documents.documents
-  );
+type Document = {
+  id: string;
+  title: string;
+  content: string;
+};
 
+type DocumentListProps = {
+  loading: boolean;
+  documents: Document[];
+};
+
+export default function DocumentList({
+  loading,
+  documents,
+}: DocumentListProps) {
   return (
     <section>
       <div className="mb-4 flex items-center justify-between">
@@ -15,12 +26,22 @@ export default function DocumentList() {
           Recent Documents
         </h2>
 
-        <button className="text-sm text-default-500 hover:text-foreground">
+        <button
+          type="button"
+          className="text-sm text-default-500 hover:text-foreground"
+        >
           View all
         </button>
       </div>
 
-      {documents.length === 0 ? (
+      {loading ? (
+        <div className="flex min-h-[200px] items-center justify-center rounded-xl border border-default-200">
+          <LoadingSpinner
+            size="lg"
+            label="Loading recent documents..."
+          />
+        </div>
+      ) : documents.length === 0 ? (
         <div className="rounded-xl border border-dashed border-default-300 p-10 text-center">
           <p className="text-default-500">
             No documents yet.
@@ -45,3 +66,4 @@ export default function DocumentList() {
     </section>
   );
 }
+

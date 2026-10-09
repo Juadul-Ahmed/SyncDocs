@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -31,17 +31,34 @@ export default function Home() {
     (state) => state.documents.documents
   );
 
+  const [loadingDocuments, setLoadingDocuments] = useState(true);
+
   useEffect(() => {
+    let cancelled = false;
+
     const loadDocuments = async () => {
+      setLoadingDocuments(true);
+
       try {
         const data = await getDocuments();
-        dispatch(setDocuments(data));
+
+        if (!cancelled) {
+          dispatch(setDocuments(data));
+        }
       } catch (error) {
         console.error("Failed to load documents:", error);
+      } finally {
+        if (!cancelled) {
+          setLoadingDocuments(false);
+        }
       }
     };
 
     loadDocuments();
+
+    return () => {
+      cancelled = true;
+    };
   }, [dispatch]);
 
   const handleCreateDocument = async () => {
@@ -72,10 +89,14 @@ export default function Home() {
 
             <DashboardStats />
 
-            <DocumentList />
+            <DocumentList
+              loading={loadingDocuments}
+              documents={documents}
+            />
           </div>
         </main>
       </div>
     </div>
   );
 }
+
