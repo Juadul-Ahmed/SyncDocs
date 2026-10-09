@@ -78,3 +78,35 @@ export const getDocument = async (
     content: data.content,
   };
 };
+
+
+export const updateDocument = async (
+  id: string,
+  documentData: {
+    title: string;
+    content: string;
+  }
+) => {
+  const response = await fetch(
+    `${API_URL}/documents/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(documentData),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to update document");
+  }
+
+  const data: ApiDocument = await response.json();
+
+  return {
+    id: data._id,
+    title: data.title,
+    content: data.content,
+  };
+};

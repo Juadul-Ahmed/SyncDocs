@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -21,8 +20,14 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "@/store/hooks";
-import { updateDocument } from "@/store/slices/documentSlice";
-import { getDocument } from "@/lib/api";
+import {
+  addDocument,
+  updateDocument,
+} from "@/store/slices/documentSlice";
+import {
+  getDocument,
+  updateDocument as updateDocumentApi,
+} from "@/lib/api";
 
 export default function DocumentPage() {
   const params = useParams();
@@ -40,7 +45,9 @@ export default function DocumentPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -48,7 +55,7 @@ export default function DocumentPage() {
 
     const loadDocument = async () => {
       setLoading(true);
-      setError("");
+      setLoadError("");
 
       try {
         const data = await getDocument(documentId);
@@ -58,13 +65,18 @@ export default function DocumentPage() {
         setTitle(data.title);
         setContent(data.content);
 
-        // Keep Redux synchronized with the fetched document.
-        dispatch(updateDocument(data));
-      } catch (err) {
+        if (document) {
+          dispatch(updateDocument(data));
+        } else {
+          dispatch(addDocument(data));
+        }
+      } catch (error) {
         if (cancelled) return;
 
-        console.error("Failed to load document:", err);
-        setError("Unable to load this document. Please try again.");
+        console.error("Failed to load document:", error);
+        setLoadError(
+          "Unable to load this document. Please try again."
+        );
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -79,25 +91,37 @@ export default function DocumentPage() {
     };
   }, [documentId, dispatch]);
 
-  const handleSave = () => {
-    if (!document) {
-      setError("The document is not available in Redux.");
-      return;
+  const handleSave = async () => {
+    if (saving) return;
+
+    setSaving(true);
+    setSaved(false);
+    setSaveError("");
+
+    try {
+      const updatedDocument = await updateDocumentApi(
+        documentId,
+        {
+          title: title.trim() || "Untitled Document",
+          content,
+        }
+      );
+
+      setTitle(updatedDocument.title);
+      dispatch(updateDocument(updatedDocument));
+      setSaved(true);
+
+      window.setTimeout(() => {
+        setSaved(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to save document:", error);
+      setSaveError(
+        "Failed to save changes. Please try again."
+      );
+    } finally {
+      setSaving(false);
     }
-
-    dispatch(
-      updateDocument({
-        id: documentId,
-        title,
-        content,
-      })
-    );
-
-    setSaved(true);
-
-    setTimeout(() => {
-      setSaved(false);
-    }, 2000);
   };
 
   if (loading) {
@@ -110,7 +134,7 @@ export default function DocumentPage() {
     );
   }
 
-  if (error || !document) {
+  if (loadError) {
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="glass glass-shadow glass-enter w-full max-w-md rounded-3xl p-8 text-center">
@@ -123,7 +147,7 @@ export default function DocumentPage() {
           </h1>
 
           <p className="mt-2 text-sm leading-6 text-white/45">
-            {error || "This document could not be loaded."}
+            {loadError}
           </p>
 
           <Button
@@ -165,6 +189,7 @@ export default function DocumentPage() {
           <Button
             variant="primary"
             onPress={handleSave}
+            isDisabled={saving}
             className="group h-10 rounded-xl border border-white/[0.12] bg-white px-4 font-semibold text-black !shadow-none transition-all duration-300 hover:scale-[1.03] hover:-translate-y-0.5 hover:bg-white active:scale-[0.97]"
           >
             {saved ? (
@@ -175,7 +200,14 @@ export default function DocumentPage() {
                 className="transition-transform duration-300 group-hover:-translate-y-0.5"
               />
             )}
-            <span>{saved ? "Saved" : "Save"}</span>
+
+            <span>
+              {saving
+                ? "Saving..."
+                : saved
+                  ? "Saved"
+                  : "Save"}
+            </span>
           </Button>
         </div>
       </header>
@@ -227,9 +259,20 @@ export default function DocumentPage() {
               />
             </TextField>
 
+            {saveError && (
+              <p
+                role="alert"
+                className="mt-4 text-sm text-red-400"
+              >
+                {saveError}
+              </p>
+            )}
+
             <div className="mt-5 flex items-center justify-between border-t border-white/[0.07] pt-4">
               <p className="text-xs text-white/30">
-                Changes are saved manually
+                {saved
+                  ? "All changes saved"
+                  : "Changes are saved manually"}
               </p>
 
               <p className="text-xs text-white/30">

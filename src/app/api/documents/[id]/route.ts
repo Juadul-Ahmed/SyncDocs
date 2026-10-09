@@ -33,3 +33,38 @@ export async function GET(
     );
   }
 }
+
+
+export async function PUT(
+  request: Request,
+  { params }: RouteContext
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+
+    const response = await fetch(
+      `${API_URL}/documents/${encodeURIComponent(id)}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    const data = await response.json();
+
+    return NextResponse.json(data, {
+      status: response.status,
+    });
+  } catch (error) {
+    console.error("PUT document proxy error:", error);
+
+    return NextResponse.json(
+      { message: "Failed to update document" },
+      { status: 500 }
+    );
+  }
+}
