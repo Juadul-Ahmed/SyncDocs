@@ -2,17 +2,22 @@
 
 import { useState } from "react";
 import { Button } from "@heroui/react";
-import {
-  FiClock,
-  FiFileText,
-  FiTrash2,
-  FiX,
-} from "react-icons/fi";
+import { FiClock, FiFileText, FiTrash2, FiX, FiEdit3 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 
-import { deleteDocument as deleteDocumentApi } from "@/lib/api";
-import { deleteDocument as deleteDocumentAction } from "@/store/slices/documentSlice";
+import {
+  deleteDocument as deleteDocumentApi,
+  getDocument,
+  updateDocument as updateDocumentApi,
+} from "@/lib/api";
+
+import {
+  deleteDocument as deleteDocumentAction,
+  updateDocument as updateDocumentAction,
+} from "@/store/slices/documentSlice";
+
 import { useAppDispatch } from "@/store/hooks";
+import RenameDocumentModal from "./RenameDocumentModal";
 
 type DocumentCardProps = {
   id: string;
@@ -68,10 +73,24 @@ export default function DocumentCard({
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [error, setError] = useState("");
 
   const handleOpenDocument = () => {
     router.push(`/documents/${id}`);
+  };
+
+  const handleRename = async (newTitle: string) => {
+    // Fetch the latest document so its content is preserved.
+    const document = await getDocument(id);
+
+    const updatedDocument = await updateDocumentApi(id, {
+      title: newTitle,
+      content: document.content,
+    });
+
+    // Update Redux only after MongoDB confirms success.
+    dispatch(updateDocumentAction(updatedDocument));
   };
 
   const handleDelete = async () => {
@@ -81,12 +100,9 @@ export default function DocumentCard({
     setError("");
 
     try {
-      // Delete from MongoDB through the Next.js API proxy.
       await deleteDocumentApi(id);
 
-      // Update Redux only after the API confirms success.
       dispatch(deleteDocumentAction(id));
-
       setIsConfirmOpen(false);
     } catch (err) {
       console.error("Failed to delete document:", err);
@@ -100,7 +116,14 @@ export default function DocumentCard({
     <>
       {/* Document Card */}
       <div
-        onClick={handleOpenDocument}
+        onClick={(event) => {
+          // Clicking action buttons should not open the editor.
+          if ((event.target as HTMLElement).closest("button")) {
+            return;
+          }
+
+          handleOpenDocument();
+        }}
         onKeyDown={(event) => {
           if (event.target !== event.currentTarget) return;
 
@@ -131,7 +154,7 @@ export default function DocumentCard({
           "
         />
 
-        {/* Icon and delete action */}
+        {/* Document icon and actions */}
         <div className="relative z-10 flex items-start justify-between">
           <div
             className="
@@ -147,25 +170,46 @@ export default function DocumentCard({
             />
           </div>
 
-          {/* Always-visible delete button */}
-          <Button
-            isIconOnly
-            variant="tertiary"
-            aria-label={`Delete document ${title}`}
-            isDisabled={isDeleting}
-            onPress={() => {
-              setError("");
-              setIsConfirmOpen(true);
-            }}
-            className="
-              !bg-transparent !text-white/40 !shadow-none
-              transition-all duration-200
-              hover:!bg-red-500/10 hover:!text-red-400
-              hover:scale-105
-            "
-          >
-            <FiTrash2 size={18} />
-          </Button>
+          <div className="flex items-center gap-1">
+            {/* Rename button */}
+            <Button
+              isIconOnly
+              variant="tertiary"
+              aria-label={`Rename document ${title}`}
+              onPress={() => {
+                setError("");
+                setIsRenameOpen(true);
+              }}
+              className="
+                !bg-transparent !text-white/40 !shadow-none
+                transition-all duration-200
+                hover:!bg-blue-500/10 hover:!text-blue-300
+                hover:scale-105
+              "
+            >
+              <FiEdit3 size={17} />
+            </Button>
+
+            {/* Delete button */}
+            <Button
+              isIconOnly
+              variant="tertiary"
+              aria-label={`Delete document ${title}`}
+              isDisabled={isDeleting}
+              onPress={() => {
+                setError("");
+                setIsConfirmOpen(true);
+              }}
+              className="
+                !bg-transparent !text-white/40 !shadow-none
+                transition-all duration-200
+                hover:!bg-red-500/10 hover:!text-red-400
+                hover:scale-105
+              "
+            >
+              <FiTrash2 size={18} />
+            </Button>
+          </div>
         </div>
 
         {/* Document details */}
@@ -191,164 +235,145 @@ export default function DocumentCard({
         </div>
       </div>
 
-      {/* Single confirmation dialog */}
+      {/* Rename modal */}
+      <RenameDocumentModal
+        key={`${id}-${isRenameOpen ? "open" : "closed"}-${title}`}
+        isOpen={isRenameOpen}
+        title={title}
+        onClose={() => setIsRenameOpen(false)}
+        onSave={handleRename}
+      />
+
+      {/* Glassmorphism delete confirmation */}
       {isConfirmOpen && (
-         <div
-    className="
-      fixed inset-0 z-[100]
-      flex items-center justify-center
-      bg-black/50 p-4
-      backdrop-blur-md
-      animate-in fade-in duration-200
-    "
-    onClick={() => {
-      if (!isDeleting) setIsConfirmOpen(false);
-    }}
-  >
-    <div
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby={`delete-title-${id}`}
-      aria-describedby={`delete-description-${id}`}
-      className="
-        relative w-full max-w-md overflow-hidden
-        rounded-3xl
-        border border-white/[0.14]
-        bg-white/[0.07]
-        p-6 sm:p-7
-        shadow-[0_24px_80px_rgba(0,0,0,0.55)]
-        backdrop-blur-2xl
-        animate-in zoom-in-95 duration-200
-      "
-      onClick={(event) => event.stopPropagation()}
-    >
-      {/* Subtle glass glow */}
-      <div
-        className="
-          pointer-events-none absolute -right-16 -top-20
-          h-48 w-48 rounded-full
-          bg-red-500/[0.10] blur-3xl
-        "
-      />
-
-      {/* Glass border highlight */}
-      <div
-        className="
-          pointer-events-none absolute inset-0
-          rounded-3xl border border-white/[0.04]
-        "
-      />
-
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="mb-6 flex items-start justify-between">
-          <div
-            className="
-              flex h-14 w-14 items-center justify-center
-              rounded-2xl
-              border border-red-400/20
-              bg-red-500/[0.10]
-              text-red-400
-              shadow-[0_0_30px_rgba(239,68,68,0.08)]
-            "
-          >
-            <FiTrash2 size={24} />
-          </div>
-
-          <Button
-            isIconOnly
-            variant="tertiary"
-            aria-label="Close confirmation"
-            isDisabled={isDeleting}
-            onPress={() => setIsConfirmOpen(false)}
-            className="
-              !bg-white/[0.05]
-              !text-white/50
-              !shadow-none
-              hover:!bg-white/[0.12]
-              hover:!text-white
-            "
-          >
-            <FiX size={18} />
-          </Button>
-        </div>
-
-        {/* Title and description */}
-        <h2
-          id={`delete-title-${id}`}
-          className="text-xl font-semibold tracking-tight text-white"
+        <div
+          className="
+            fixed inset-0 z-[100] flex items-center justify-center
+            bg-black/50 p-4 backdrop-blur-md
+            animate-in fade-in duration-200
+          "
+          onClick={() => {
+            if (!isDeleting) setIsConfirmOpen(false);
+          }}
         >
-          Delete document?
-        </h2>
-
-        <p
-          id={`delete-description-${id}`}
-          className="mt-3 text-sm leading-6 text-white/60"
-        >
-          Are you sure you want to delete{" "}
-          <span className="font-medium text-white/90">
-            {title}
-          </span>
-          ? This action cannot be undone.
-        </p>
-
-        {/* Error message */}
-        {error && (
           <div
-            role="alert"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby={`delete-title-${id}`}
+            aria-describedby={`delete-description-${id}`}
             className="
-              mt-4 rounded-xl
-              border border-red-400/20
-              bg-red-500/[0.08]
-              px-4 py-3
-              text-sm text-red-300
-              backdrop-blur-md
+              relative w-full max-w-md overflow-hidden rounded-3xl
+              border border-white/[0.14] bg-white/[0.07]
+              p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)]
+              backdrop-blur-2xl sm:p-7
+              animate-in zoom-in-95 duration-200
             "
+            onClick={(event) => event.stopPropagation()}
           >
-            {error}
+            {/* Red glass glow */}
+            <div
+              className="
+                pointer-events-none absolute -right-16 -top-20
+                h-48 w-48 rounded-full bg-red-500/[0.10] blur-3xl
+              "
+            />
+
+            <div
+              className="
+                pointer-events-none absolute inset-0 rounded-3xl
+                border border-white/[0.04]
+              "
+            />
+
+            <div className="relative z-10">
+              <div className="mb-6 flex items-start justify-between">
+                <div
+                  className="
+                    flex h-14 w-14 items-center justify-center rounded-2xl
+                    border border-red-400/20 bg-red-500/[0.10]
+                    text-red-400 shadow-[0_0_30px_rgba(239,68,68,0.08)]
+                  "
+                >
+                  <FiTrash2 size={24} />
+                </div>
+
+                <Button
+                  isIconOnly
+                  variant="tertiary"
+                  aria-label="Close confirmation"
+                  isDisabled={isDeleting}
+                  onPress={() => setIsConfirmOpen(false)}
+                  className="
+                    !bg-white/[0.05] !text-white/50 !shadow-none
+                    hover:!bg-white/[0.12] hover:!text-white
+                  "
+                >
+                  <FiX size={18} />
+                </Button>
+              </div>
+
+              <h2
+                id={`delete-title-${id}`}
+                className="text-xl font-semibold tracking-tight text-white"
+              >
+                Delete document?
+              </h2>
+
+              <p
+                id={`delete-description-${id}`}
+                className="mt-3 text-sm leading-6 text-white/60"
+              >
+                Are you sure you want to delete{" "}
+                <span className="font-medium text-white/90">{title}</span>? This
+                action cannot be undone.
+              </p>
+
+              {error && (
+                <div
+                  role="alert"
+                  className="
+                    mt-4 rounded-xl border border-red-400/20
+                    bg-red-500/[0.08] px-4 py-3 text-sm text-red-300
+                    backdrop-blur-md
+                  "
+                >
+                  {error}
+                </div>
+              )}
+
+              <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <Button
+                  variant="tertiary"
+                  isDisabled={isDeleting}
+                  onPress={() => setIsConfirmOpen(false)}
+                  className="
+                    !border !border-white/[0.10] !bg-white/[0.04]
+                    !text-white/70 !shadow-none
+                    hover:!border-white/[0.18] hover:!bg-white/[0.09]
+                    hover:!text-white
+                  "
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  isDisabled={isDeleting}
+                  onPress={handleDelete}
+                  className="
+                    !border !border-red-400/20 !bg-red-500 !text-white
+                    !shadow-[0_4px_20px_rgba(239,68,68,0.20)]
+                    transition-all duration-200 hover:!bg-red-400
+                    hover:!shadow-[0_6px_26px_rgba(239,68,68,0.30)]
+                    active:scale-[0.98]
+                  "
+                >
+                  <FiTrash2 size={16} />
+                  {isDeleting ? "Deleting..." : "Delete document"}
+                </Button>
+              </div>
+            </div>
           </div>
-        )}
-
-        {/* Actions */}
-        <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <Button
-            variant="tertiary"
-            isDisabled={isDeleting}
-            onPress={() => setIsConfirmOpen(false)}
-            className="
-              !border !border-white/[0.10]
-              !bg-white/[0.04]
-              !text-white/70
-              !shadow-none
-              hover:!border-white/[0.18]
-              hover:!bg-white/[0.09]
-              hover:!text-white
-            "
-          >
-            Cancel
-          </Button>
-
-          <Button
-            isDisabled={isDeleting}
-            onPress={handleDelete}
-            className="
-              !border !border-red-400/20
-              !bg-red-500
-              !text-white
-              !shadow-[0_4px_20px_rgba(239,68,68,0.20)]
-              transition-all duration-200
-              hover:!bg-red-400
-              hover:!shadow-[0_6px_26px_rgba(239,68,68,0.30)]
-              active:scale-[0.98]
-            "
-          >
-            <FiTrash2 size={16} />
-            {isDeleting ? "Deleting..." : "Delete document"}
-          </Button>
         </div>
-      </div>
-    </div>
-  </div>
       )}
     </>
   );
