@@ -1,3 +1,4 @@
+
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type Document = {
@@ -6,6 +7,7 @@ type Document = {
   content: string;
   createdAt: string;
   updatedAt: string;
+  isFavorite: boolean;
 };
 
 type DocumentState = {
@@ -21,7 +23,6 @@ const initialState: DocumentState = {
 const documentSlice = createSlice({
   name: "documents",
   initialState,
-
   reducers: {
     setDocuments: (state, action: PayloadAction<Document[]>) => {
       state.documents = action.payload;
@@ -39,11 +40,20 @@ const documentSlice = createSlice({
       if (index !== -1) {
         state.documents[index] = action.payload;
       }
+
+      if (state.currentDocument?.id === action.payload.id) {
+        state.currentDocument = action.payload;
+      }
     },
+
     deleteDocument: (state, action: PayloadAction<string>) => {
       state.documents = state.documents.filter(
         (document) => document.id !== action.payload,
       );
+
+      if (state.currentDocument?.id === action.payload) {
+        state.currentDocument = null;
+      }
     },
   },
 });
@@ -56,3 +66,4 @@ export const {
 } = documentSlice.actions;
 
 export default documentSlice.reducer;
+

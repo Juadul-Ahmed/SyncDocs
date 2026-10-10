@@ -114,3 +114,27 @@ export const deleteDocument = async (req, res) => {
     });
   }
 };
+
+// Toggle a document's favorite status
+export const toggleFavorite = async (req, res) => {
+  try {
+    const document = await Document.findById(req.params.id);
+
+    if (!document) {
+      return res.status(404).json({
+        message: "Document not found",
+      });
+    }
+
+    document.isFavorite = !document.isFavorite;
+
+    await document.save();
+
+    return res.status(200).json(document);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to update favorite status",
+      error: error.message,
+    });
+  }
+};

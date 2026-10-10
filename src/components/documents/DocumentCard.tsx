@@ -2,13 +2,21 @@
 
 import { useState } from "react";
 import { Button } from "@heroui/react";
-import { FiClock, FiFileText, FiTrash2, FiX, FiEdit3 } from "react-icons/fi";
+import {
+  FiClock,
+  FiFileText,
+  FiTrash2,
+  FiX,
+  FiEdit3,
+  FiStar,
+} from "react-icons/fi";
 import { useRouter } from "next/navigation";
 
 import {
   deleteDocument as deleteDocumentApi,
   getDocument,
   updateDocument as updateDocumentApi,
+  toggleFavorite as toggleFavoriteApi,
 } from "@/lib/api";
 
 import {
@@ -23,6 +31,7 @@ type DocumentCardProps = {
   id: string;
   title: string;
   updatedAt: string;
+  isFavorite: boolean;
 };
 
 function formatUpdatedAt(dateString: string): string {
@@ -67,6 +76,7 @@ export default function DocumentCard({
   id,
   title,
   updatedAt,
+  isFavorite,
 }: DocumentCardProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -74,6 +84,7 @@ export default function DocumentCard({
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [error, setError] = useState("");
 
   const handleOpenDocument = () => {
@@ -81,7 +92,6 @@ export default function DocumentCard({
   };
 
   const handleRename = async (newTitle: string) => {
-    // Fetch the latest document so its content is preserved.
     const document = await getDocument(id);
 
     const updatedDocument = await updateDocumentApi(id, {
@@ -89,8 +99,25 @@ export default function DocumentCard({
       content: document.content,
     });
 
-    // Update Redux only after MongoDB confirms success.
     dispatch(updateDocumentAction(updatedDocument));
+  };
+
+  const handleToggleFavorite = async () => {
+    if (isTogglingFavorite) return;
+
+    setIsTogglingFavorite(true);
+    setError("");
+
+    try {
+      const updatedDocument = await toggleFavoriteApi(id);
+
+      dispatch(updateDocumentAction(updatedDocument));
+    } catch (err) {
+      console.error("Failed to update favorite:", err);
+      setError("Couldn't update favorite status. Please try again.");
+    } finally {
+      setIsTogglingFavorite(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -117,11 +144,7 @@ export default function DocumentCard({
       {/* Document Card */}
       <div
         onClick={(event) => {
-          // Clicking action buttons should not open the editor.
-          if ((event.target as HTMLElement).closest("button")) {
-            return;
-          }
-
+          if ((event.target as HTMLElement).closest("button")) return;
           handleOpenDocument();
         }}
         onKeyDown={(event) => {
@@ -171,6 +194,33 @@ export default function DocumentCard({
           </div>
 
           <div className="flex items-center gap-1">
+            {/* Favorite button */}
+            <Button
+              isIconOnly
+              variant="tertiary"
+              aria-label={
+                isFavorite
+                  ? `Remove ${title} from favorites`
+                  : `Add ${title} to favorites`
+              }
+              isDisabled={isTogglingFavorite}
+              onPress={handleToggleFavorite}
+              className={`
+                !bg-transparent !shadow-none
+                transition-all duration-200 hover:scale-110
+                ${
+                  isFavorite
+                    ? "!text-yellow-400 hover:!text-yellow-300"
+                    : "!text-white/40 hover:!bg-yellow-500/10 hover:!text-yellow-300"
+                }
+              `}
+            >
+              <FiStar
+                size={18}
+                fill={isFavorite ? "currentColor" : "none"}
+              />
+            </Button>
+
             {/* Rename button */}
             <Button
               isIconOnly
@@ -232,6 +282,12 @@ export default function DocumentCard({
             <FiClock size={14} />
             <span>{formatUpdatedAt(updatedAt)}</span>
           </div>
+
+          {error && (
+            <p role="alert" className="mt-3 text-sm text-red-300">
+              {error}
+            </p>
+          )}
         </div>
       </div>
 
@@ -270,7 +326,6 @@ export default function DocumentCard({
             "
             onClick={(event) => event.stopPropagation()}
           >
-            {/* Red glass glow */}
             <div
               className="
                 pointer-events-none absolute -right-16 -top-20
@@ -378,3 +433,4 @@ export default function DocumentCard({
     </>
   );
 }
+

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState } from "react";
@@ -16,6 +15,7 @@ type Document = {
   content: string;
   createdAt: string;
   updatedAt: string;
+  isFavorite: boolean;
 };
 
 type DocumentListProps = {
@@ -29,8 +29,7 @@ export default function DocumentList({
 }: DocumentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
-  const [dateFilter, setDateFilter] =
-    useState<DateFilterOption>("all");
+  const [dateFilter, setDateFilter] = useState<DateFilterOption>("all");
 
   // Calculate the cutoff when the user changes the date filter.
   const [dateCutoff, setDateCutoff] = useState<number | null>(null);
@@ -45,9 +44,7 @@ export default function DocumentList({
 
     const duration = durations[value];
 
-    setDateCutoff(
-      duration === null ? null : Date.now() - duration,
-    );
+    setDateCutoff(duration === null ? null : Date.now() - duration);
     setDateFilter(value);
   };
 
@@ -56,9 +53,7 @@ export default function DocumentList({
 
     return [...documents]
       .filter((document) => {
-        const matchesTitle = document.title
-          .toLowerCase()
-          .includes(query);
+        const matchesTitle = document.title.toLowerCase().includes(query);
 
         const updatedAt = new Date(document.updatedAt).getTime();
 
@@ -67,13 +62,13 @@ export default function DocumentList({
           (dateCutoff !== null &&
             Number.isFinite(updatedAt) &&
             updatedAt >= dateCutoff &&
-            updatedAt <= dateCutoff + (
-              dateFilter === "7days"
-                ? 7 * 24 * 60 * 60 * 1000
-                : dateFilter === "30days"
-                  ? 30 * 24 * 60 * 60 * 1000
-                  : 365 * 24 * 60 * 60 * 1000
-            ));
+            updatedAt <=
+              dateCutoff +
+                (dateFilter === "7days"
+                  ? 7 * 24 * 60 * 60 * 1000
+                  : dateFilter === "30days"
+                    ? 30 * 24 * 60 * 60 * 1000
+                    : 365 * 24 * 60 * 60 * 1000));
 
         return matchesTitle && matchesDate;
       })
@@ -81,8 +76,7 @@ export default function DocumentList({
         switch (sortBy) {
           case "oldest":
             return (
-              new Date(a.updatedAt).getTime() -
-              new Date(b.updatedAt).getTime()
+              new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
             );
 
           case "title-asc":
@@ -94,8 +88,7 @@ export default function DocumentList({
           case "recent":
           default:
             return (
-              new Date(b.updatedAt).getTime() -
-              new Date(a.updatedAt).getTime()
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
             );
         }
       });
@@ -117,9 +110,7 @@ export default function DocumentList({
           {loading
             ? "Loading your documents..."
             : `${filteredDocuments.length} ${
-                filteredDocuments.length === 1
-                  ? "document"
-                  : "documents"
+                filteredDocuments.length === 1 ? "document" : "documents"
               } found`}
         </p>
       </div>
@@ -135,16 +126,11 @@ export default function DocumentList({
 
       {loading ? (
         <div className="flex min-h-[200px] items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.02]">
-          <LoadingSpinner
-            size="lg"
-            label="Loading recent documents..."
-          />
+          <LoadingSpinner size="lg" label="Loading recent documents..." />
         </div>
       ) : documents.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/[0.12] bg-white/[0.02] p-10 text-center">
-          <p className="font-medium text-white/80">
-            No documents yet.
-          </p>
+          <p className="font-medium text-white/80">No documents yet.</p>
 
           <p className="mt-2 text-sm text-white/45">
             Create your first document to get started.
@@ -152,9 +138,7 @@ export default function DocumentList({
         </div>
       ) : filteredDocuments.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/[0.12] bg-white/[0.02] p-10 text-center">
-          <p className="font-medium text-white/80">
-            No matching documents
-          </p>
+          <p className="font-medium text-white/80">No matching documents</p>
 
           <p className="mt-2 text-sm text-white/45">
             Try changing your search or date filter.
@@ -172,10 +156,11 @@ export default function DocumentList({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredDocuments.map((document) => (
             <DocumentCard
-              key={document.id}
+            key={document.id}
               id={document.id}
               title={document.title}
               updatedAt={document.updatedAt}
+              isFavorite={document.isFavorite}
             />
           ))}
         </div>
@@ -183,4 +168,3 @@ export default function DocumentList({
     </section>
   );
 }
-

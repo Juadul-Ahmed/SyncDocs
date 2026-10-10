@@ -1,3 +1,4 @@
+
 import express from "express";
 
 import {
@@ -6,15 +7,19 @@ import {
   getDocumentById,
   updateDocument,
   deleteDocument,
+  toggleFavorite,
 } from "../controllers/documentController.js";
 
 const router = express.Router();
 
 router.get("/", getDocuments);
 
-router.get("/:id", getDocumentById);
-
 router.post("/", createDocument);
+
+// Keep the favorite route before the general ID route
+router.patch("/:id/favorite", toggleFavorite);
+
+router.get("/:id", getDocumentById);
 
 router.put("/:id", updateDocument);
 

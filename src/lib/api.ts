@@ -1,3 +1,4 @@
+
 const API_URL = "/api";
 
 export type ApiDocument = {
@@ -6,6 +7,7 @@ export type ApiDocument = {
   content: string;
   createdAt: string;
   updatedAt: string;
+  isFavorite?: boolean;
 };
 
 export type DocumentData = {
@@ -14,7 +16,18 @@ export type DocumentData = {
   content: string;
   createdAt: string;
   updatedAt: string;
+  isFavorite: boolean;
 };
+
+// Convert MongoDB document to frontend format
+const mapDocument = (document: ApiDocument): DocumentData => ({
+  id: document._id,
+  title: document.title,
+  content: document.content,
+  createdAt: document.createdAt,
+  updatedAt: document.updatedAt,
+  isFavorite: document.isFavorite ?? false,
+});
 
 // GET all documents
 export const getDocuments = async (): Promise<DocumentData[]> => {
@@ -28,13 +41,7 @@ export const getDocuments = async (): Promise<DocumentData[]> => {
 
   const data: ApiDocument[] = await response.json();
 
-  return data.map((document) => ({
-    id: document._id,
-    title: document.title,
-    content: document.content,
-    createdAt: document.createdAt,
-    updatedAt: document.updatedAt,
-  }));
+  return data.map(mapDocument);
 };
 
 // CREATE a document
@@ -58,13 +65,7 @@ export const createDocument = async (
 
   const data: ApiDocument = await response.json();
 
-  return {
-    id: data._id,
-    title: data.title,
-    content: data.content,
-    createdAt: data.createdAt,
-    updatedAt: data.updatedAt,
-  };
+  return mapDocument(data);
 };
 
 // GET one document by ID
@@ -84,13 +85,7 @@ export const getDocument = async (
 
   const data: ApiDocument = await response.json();
 
-  return {
-    id: data._id,
-    title: data.title,
-    content: data.content,
-    createdAt: data.createdAt,
-    updatedAt: data.updatedAt,
-  };
+  return mapDocument(data);
 };
 
 // UPDATE a document
@@ -118,13 +113,27 @@ export const updateDocument = async (
 
   const data: ApiDocument = await response.json();
 
-  return {
-    id: data._id,
-    title: data.title,
-    content: data.content,
-    createdAt: data.createdAt,
-    updatedAt: data.updatedAt,
-  };
+  return mapDocument(data);
+};
+
+// TOGGLE favorite status
+export const toggleFavorite = async (
+  id: string,
+): Promise<DocumentData> => {
+  const response = await fetch(
+    `${API_URL}/documents/${encodeURIComponent(id)}/favorite`,
+    {
+      method: "PATCH",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to update favorite status");
+  }
+
+  const data: ApiDocument = await response.json();
+
+  return mapDocument(data);
 };
 
 // DELETE a document
@@ -143,3 +152,4 @@ export const deleteDocument = async (
     throw new Error(message || "Failed to delete document");
   }
 };
+
